@@ -1,0 +1,34 @@
+error | stats count
+--------------------------
+error | timechart count
+-------------------------
+error | top user
+--------------------------
+error | table user, action, _time
+--------------------------
+error | eval duration = endTime - startTime | table user, action, duration
+------------------------------
+search error | join user [search warning]
+------------------------------
+search error | transaction user
+-----------------------------
+error | rex "user=(?<user>[^ ]+)"
+-----------------------------
+error | lookup user_info user OUTPUT email
+-------------------------------
+search error | spath input=raw_output path=results.user
+----------------------------
+search error | multikv fields user, action
+-------------------------------
+search error | streamstats count by user
+-----------------------
+search error | dedup user
+-------------------------
+search error | sort - count
+-------------------------
+search error | mvexpand user
+---------------------------
+search error | fillnull value="unknown" user
+-----------------------
+search error | fieldformat user="User: "+user
+

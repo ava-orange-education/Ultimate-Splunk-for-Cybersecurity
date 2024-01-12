@@ -1,0 +1,108 @@
+2022-10-01 12:30:00 INFO: User logged in, UserID: 123
+2022-10-01 12:31:15 ERROR: Failed database query, Query: SELECT * FROM users
+2022-10-01 12:34:45 WARNING: High memory usage, Memory: 80%
+-----------------------------------------------
+
+[my_app_log]
+TIME_FORMAT = %Y-%m-%d %H:%M:%S
+MAX_TIMESTAMP_LOOKAHEAD = 19
+LINE_BREAKER = ([\r\n]+)
+SHOULD_LINEMERGE = false
+EXTRACT-loglevel = ^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} (?<loglevel>[A-Z]+):
+EXTRACT-message = (?<log_message>[A-Z]+): (.+)
+----------------------------------------------
+
+[anonymize_user_id]
+SOURCE_KEY = log_message
+REGEX = (UserID: )\d+
+FORMAT = $1XXX
+DEST_KEY = _raw
+-------------------------------------
+
+[my_app_log]
+...
+FIELDALIAS-loglevel_to_severity = loglevel AS severity
+Similarly, you can define event tags in a tags.conf file to categorize your events:
+
+[eventtype=my_app_log_errors]
+search = sourcetype=my_app_log loglevel=ERROR
+
+[my_app_log]
+my_app_log_errors = enabled
+-------------------------------------
+
+[my_app_log]
+...
+EXTRACT-user_id = UserID:\s(?<UserID>\d+)
+EXTRACT-db_query = Query:\s(?<Query>[^,]+)
+----------------------------------------
+
+[user_login]
+search = sourcetype=my_app_log log_message="User logged in"
+
+[failed_db_query]
+search = sourcetype=my_app_log log_message="Failed database query"
+
+[high_memory_usage]
+search = sourcetype=my_app_log log_message="High memory usage"
+---------------------------------------
+
+UserID,Username,Department
+123,jdoe,IT
+124,asmith,HR
+125,jbrown,Finance
+---------------------------------
+
+[user_info_lookup]
+filename = user_info.csv
+
+Then, define the lookup in the props.conf file:
+
+[my_app_log]
+...
+LOOKUP-user_info = user_info_lookup UserID OUTPUT Username Department
+--------------------------------
+
+eventtype=user_login | stats count by Department
+---------------------------
+
+eventtype=failed_db_query | stats count by Query | sort -count
+-----------------------------
+
+eventtype=high_memory_usage | table _time, UserID, Username, Department, log_message
+-------------------------------
+
+import requests
+import json
+import sys
+import os
+
+api_key = "YOUR_API_KEY"
+city_name = "San Francisco"
+base_url = f"http://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={api_key}"
+
+response = requests.get(base_url)
+data = response.json()
+
+if data["cod"] != "404":
+    weather_data = {
+        "city": data["name"],
+        "country": data["sys"]["country"],
+        "temperature": data["main"]["temp"],
+        "humidity": data["main"]["humidity"],
+        "pressure": data["main"]["pressure"],
+        "weather": data["weather"][0]["description"],
+    }
+    
+    print(json.dumps(weather_data))
+else:
+    print("City not found.")
+---------------------------------------
+
+chmod +x weather_data.py
+----------------------------------------
+
+sourcetype=weather_data city="San Francisco" | head 1 | table _time, city, country, temperature, humidity, pressure, weather
+---------------------------------
+
+

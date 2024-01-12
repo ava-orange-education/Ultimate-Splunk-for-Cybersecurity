@@ -1,0 +1,13 @@
+2022-10-01 12:00:01 [INFO] User logged in: john@example.com
+2022-10-01 12:01:15 [ERROR] Failed login attempt: jane@example.com
+----------------------------
+
+Log level: INFO and ERROR
+Action: User logged in and Failed login attempt
+User: john@example.com and jane@example.com
+-----------------------------------
+
+2022-10-01 12:00:01 [INFO] User logged in: john@example.com|UID:12345
+2022-10-01 12:01:15 [ERROR] Failed login attempt: jane@example.com|UID:67890
+---------------------------------------
+

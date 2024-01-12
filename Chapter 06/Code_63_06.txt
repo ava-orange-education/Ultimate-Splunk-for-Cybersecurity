@@ -1,0 +1,6 @@
+index=network_logs sourcetype=network_traffic | stats sum(file_size) as total_transferred_MB by user, destination_ip | where total_transferred_MB > 1000 | search NOT [| inputlookup internal_ip_addresses | fields + destination_ip] | table user, destination_ip, total_transferred_MB
+------------------------------------------------
+
+index=secure_data_logs sourcetype=user_access | where hour(_time) > 22 OR hour(_time) < 6 | stats count by user, file_accessed | where count > 5
+---------------------------------------
+
